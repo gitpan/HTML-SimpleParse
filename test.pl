@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..7\n"; }
+BEGIN { $| = 1; print "1..8\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use HTML::SimpleParse;
 $loaded = 1;
@@ -19,11 +19,12 @@ print "ok 1\n";
 # of the test code):
 
 sub report_result {
+	my $ok = shift;
 	$TEST_NUM ||= 2;
-	print "not " unless $_[0];
+	print "not " unless $ok;
 	print "ok $TEST_NUM\n";
 	
-	print $_[1] if (not $_[0] and $ENV{TEST_VERBOSE});
+	print @_ if (not $ok and $ENV{TEST_VERBOSE});
 	$TEST_NUM++;
 }
 	 
@@ -57,14 +58,14 @@ sub report_result {
 	                $hash{value} eq 'chocolate or strawberry'");
 }
 
-# 7
+# 6
 {
 	my %hash=HTML::SimpleParse->parse_args(' A="xx" B');
 	&report_result(($hash{A} eq 'xx' and exists $hash{B}),
 	               "$hash{A} eq 'xx' and \$hash{B}, (". exists($hash{B}) .")\n");
 }
 
-# 6
+# 7
 {
 	my $text = <<EOF;
 	<html><head>
@@ -83,5 +84,11 @@ EOF
 	
 	&report_result($p->get_output() eq $text, $p->get_output);
 
+}
+
+# 8
+{
+	my %hash = HTML::SimpleParse->parse_args('a="b=c"');
+	&report_result($hash{a} eq "b=c", "hash: @{[ %hash ]}\n");
 }
 

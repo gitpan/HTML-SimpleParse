@@ -35,3 +35,7 @@ Revision history for Perl extension HTML::SimpleParse.
       }
       This lets Apache::OutputChain and Apache::SSIChain output their results in
       the correct order.
+
+0.05  Thu Aug 20 12:11:53 EDT 1998
+    - Fixed a bug in HTML::SimpleParse->parse_args('a="b=c"').  Thanks
+      to Shenghuo ZHU for finding it.

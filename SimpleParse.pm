@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 my $debug = 0;
 
 sub new {
@@ -94,7 +94,7 @@ sub parse_args {
 		next if $_[0] =~ m/\G\s+/gc;  # Get rid of leading whitespace
 
 		if ( $_[0] =~ m/\G
-			(\S+)=                                   # the key
+			(\S+?)=                                  # the key
 			(?:
 			 "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside,
 			  |                                      #  or
@@ -267,6 +267,21 @@ This will output the contents of the HTML, passing the real work off to
 the output_text, output_comment, etc. functions.  If you do not override any
 of these methods, this module will output the exact text that it parsed into
 a tree in the first place.
+
+=item * get_output
+
+ print $p->get_output
+
+Similar to $p->output(), but returns its result instead of printing it.
+
+=item * execute
+
+ foreach ($p->tree) {
+    print $p->execute($_);
+ }
+
+Executes a single node in the HTML parse tree.  Useful if you want to loop
+through the nodes and output them individually.
 
 =back
 
