@@ -3,6 +3,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'	=> 'HTML::SimpleParse',
-    'VERSION_FROM' => 'SimpleParse.pm', # finds $VERSION
+    'VERSION_FROM' => 'lib/HTML/SimpleParse.pm', # finds $VERSION
+    'PL_FILES'  => {},
     'dist' => { COMPRESS=>"gzip", SUFFIX=>"gz" },
 );

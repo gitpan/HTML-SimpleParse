@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION $FIX_CASE);
 
-$VERSION = '0.10';
+$VERSION = '0.11';
 my $debug = 0;
 
 sub new {
@@ -15,7 +15,7 @@ sub new {
 		    @_
 		   }, $pack;
   
-  $self->parse() if defined $self->{'text'};
+  $self->parse() if defined $self->{'text'} and length $self->{'text'};
   return $self;
 }
 
@@ -92,16 +92,17 @@ sub parse {
 $FIX_CASE = 1;
 sub parse_args {
   my $self = shift;  # Not needed here
+  my $str = shift;
   my $fix_case = ((ref $self and exists $self->{fix_case}) ? $self->{fix_case} : $FIX_CASE);
   my @returns;
   
   # Make sure we start searching at the beginning of the string
-  pos($_[0]) = 0;
+  pos($str) = 0;
   
   while (1) {
-    next if $_[0] =~ m/\G\s+/gc;  # Get rid of leading whitespace
+    next if $str =~ m/\G\s+/gc;  # Get rid of leading whitespace
     
-    if ( $_[0] =~ m/\G
+    if ( $str =~ m/\G
 	 ([\w.-]+)\s*=\s*                         # the key
 	 (?:
 	  "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside,
@@ -115,7 +116,7 @@ sub parse_args {
       $val =~ s/\\(.)/$1/gs;
       push @returns, ($fix_case==1 ? uc($key) : $fix_case==-1 ? lc($key) : $key), $val;
       
-    } elsif ( $_[0] =~ m,\G/?([\w.-]+)\s*,gc ) {
+    } elsif ( $str =~ m,\G/?([\w.-]+)\s*,gc ) {
       push @returns, ($fix_case==1 ? uc($1)   : $fix_case==-1 ? lc($1)   : $1  ), undef;
     } else {
       last;

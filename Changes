@@ -1,5 +1,17 @@
 Revision history for Perl extension HTML::SimpleParse.
 
+0.11  Sun Jan 26 10:00:41 CST 2003
+
+ - Use Test.pm to output testing results.
+
+ - Avoid an 'undefined value' warning when creating a SimpleParse
+   object with an empty string.
+
+ - Fixed a problem that caused an infinite loop in certain bizarre
+   (and as yet unduplicated by me) situations.  Reported by Peter Suschlik.
+
+ - Added a Build.PL script to build & install via Module::Build.
+
 0.10  Sat Jul  1 14:47:07 EDT 2000
    - Added the 'offset' attribute to each tree element, which tells you how
      many bytes the current tag is from the beginning of the HTML text.

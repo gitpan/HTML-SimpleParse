@@ -1,6 +1,8 @@
+Build.PL
 Changes
-MANIFEST
+MANIFEST			This list of files
+META.yml
 Makefile.PL
 README
-SimpleParse.pm
+lib/HTML/SimpleParse.pm
 test.pl
