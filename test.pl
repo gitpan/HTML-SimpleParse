@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..1\n"; }
+BEGIN { $| = 1; print "1..5\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use HTML::SimpleParse;
 $loaded = 1;
@@ -18,3 +18,41 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+sub report_result {
+	$TEST_NUM ||= 2;
+	print "not " unless $_[0];
+	print "ok $TEST_NUM\n";
+	
+	print $_[1] if (not $_[0] and $ENV{TEST_VERBOSE});
+	$TEST_NUM++;
+}
+	 
+
+# 2
+{
+	my %hash = HTML::SimpleParse->parse_args('A="xx" B=3');
+	&report_result($hash{A} eq "xx" and $hash{B} eq 3);
+}
+
+# 3
+{
+	my %hash = HTML::SimpleParse->parse_args('A="xx" B');
+	&report_result($hash{A} eq "xx" and exists $hash{B});
+}
+
+# 4
+{
+	my %hash = HTML::SimpleParse->parse_args('A="xx" B c="hi" ');
+	&report_result(($hash{A} eq "xx" and exists $hash{B} and $hash{c} eq "hi"),
+	               "$hash{A} eq xx and exists $hash{B} (". exists($hash{B}). ") and $hash{c} eq hi\n");
+}
+
+# 5
+{
+	my $text = 'type=checkbox checked name=flavor value="chocolate or strawberry"';
+	my %hash = HTML::SimpleParse->parse_args( $text );
+	&report_result(($hash{type} eq "checkbox" and exists $hash{checked} and 
+	                $hash{value} eq "chocolate or strawberry"),
+	               "$hash{type} eq checkbox and exists (". exists($hash{checked}) .") and 
+	                $hash{value} eq 'chocolate or strawberry'");
+}

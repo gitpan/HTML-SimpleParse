@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 sub new {
 	my $pack = shift;
@@ -81,16 +81,24 @@ sub parse {
 sub parse_args {
 	my $self = shift;
 	my @returns;
-	while ($_[0] =~ m/
-		([^\=]*)=                                # the key
-		(?:
-		 "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside
-		  |
-		 ([^\s>]*)\s*                            # anything else, without whitespace or >
-		)/gcx) {
-	
-		push(@returns, $1, $+);
+
+	while (1) {
+		if ( $_[0] =~ m/\G
+			(\S+)=                                   # the key
+			(?:
+			 "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside,
+			  |                                      #  or
+			 ([^\s>]*)\s*                            # anything else, without whitespace or >
+		   )/gcx ) {
+			push @returns, $1, $+;
+
+		} elsif ( $_[0] =~ m/\G(\S+)\s*/gc ) {
+			push @returns, $1, undef;
+		} else {
+			last;
+		}
 	}
+
 	return @returns;
 }
 
@@ -208,13 +216,21 @@ pairs.  For instance:
 
   $text = 'type=checkbox checked name=flavor value="chocolate or strawberry"';
   %hash = $p->parse_args( $text );
-  # %hash is ( type=>'checkbox', checked=>'', name=>'flavor',
+  # %hash is ( type=>'checkbox', checked=>undef, name=>'flavor',
   #            value=>'chocolate or strawberry' )
 
 Note that the position of the last m//g search on the string (the value 
 returned by Perl's pos() function) will be altered by the parse_args function,
 so make sure you take that into account if (in the above example) you do
 C<$text =~ m/something/g>.
+
+If an attribute has no value (like "checked" in the above example) then its
+hash value will be undefined.  Check for this by using perl's C<exists> function.
+
+This method actually returns a list (not a hash), so duplicate attributes and
+order will be preserved if you want them to be:
+
+ @hash = $p->parse_args("name=bob name=jim value=family");
 
 =item * output
 
@@ -256,8 +272,8 @@ output_comment method like so:
 
 Please do not assume that the interface here is stable.  This is a first pass, 
 and I'm still trying to incorporate suggestions from the community.  If you
-employ this module somewhere, make doubly sure before upgrading that nothing 
-breaks.
+employ this module somewhere, make doubly sure before upgrading that none of your
+code breaks when you use the newer version.
 
 
 =head1 BUGS
@@ -333,7 +349,7 @@ Ken Williams <ken@forum.swarthmore.edu>
 
 =head1 COPYRIGHT
 
-Copyright 1998 Swarthmore College.
+Copyright 1998 Swarthmore College.  All rights reserved.
 
 This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

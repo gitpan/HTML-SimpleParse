@@ -1,5 +1,9 @@
 Revision history for Perl extension HTML::SimpleParse.
 
 0.01  Fri Jun 26 17:42:41 1998
-	- original version; created by h2xs 1.18
+    - original version; created by h2xs 1.18
 
+0.02  Thu Aug  6 16:08:22 EDT 1998
+    - fixed bug in parse_args method pointed out by Ben Laurie:
+       %hash=HTML::SimpleParse->parse_args('A="xx" B');
+       did not include B in %hash.
