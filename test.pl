@@ -141,3 +141,25 @@ EOF
   &report_result($hash{Val} eq 'a value', "value: $hash{Val}\n");
 }
 
+# 16: offset
+{
+  my $text = <<EOF;
+    <html><head>
+    <title>Hiya, tester</title>
+    </head>
+	
+    <body>
+    <center><h1>Hiya, tester</h1></center>
+    <!-- here is a comment -->
+    <!DOCTYPE here is a markup>
+    <!--# here is an ssi -->
+    </body>
+    </html>
+EOF
+  my $p = new HTML::SimpleParse($text);
+  my $ok = 1;
+  foreach ($p->tree) {
+    $ok = 0 unless substr($text, $_->{offset}) =~ /^<?\Q$_->{content}/;
+  }
+  print $ok ? "ok 16\n" : "not ok 16\n";
+}

@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION $FIX_CASE);
 
-$VERSION = '0.09';
+$VERSION = '0.10';
 my $debug = 0;
 
 sub new {
@@ -79,6 +79,9 @@ sub parse {
     push @$tree, {
 		  'content' => $content,
 		  'type'    => $type,
+		  'offset'  => ($type eq 'text' ? 
+				pos($$text) - length($content) : 
+				pos($$text) - length($content) - 2),
 		 };
   }
   
@@ -112,7 +115,7 @@ sub parse_args {
       $val =~ s/\\(.)/$1/gs;
       push @returns, ($fix_case==1 ? uc($key) : $fix_case==-1 ? lc($key) : $key), $val;
       
-    } elsif ( $_[0] =~ m/\G([\w.-]+)\s*/gc ) {
+    } elsif ( $_[0] =~ m,\G/?([\w.-]+)\s*,gc ) {
       push @returns, ($fix_case==1 ? uc($1)   : $fix_case==-1 ? lc($1)   : $1  ), undef;
     } else {
       last;
@@ -240,10 +243,14 @@ Get or set the contents of the HTML to be parsed.
  foreach ($p->tree) { ... }
 
 Returns a list of all the nodes in the tree, in case you want to step
-through them manually or something.  Each node in the tree is an anonymous
-hash with (at least) two data members, $node->{type} (is this a comment,
-a start tag, an end tag, etc.) and $node->{content} (all the text between
-the angle brackets, verbatim).
+through them manually or something.  Each node in the tree is an
+anonymous hash with (at least) three data members, $node->{type} (is
+this a comment, a start tag, an end tag, etc.), $node->{content} (all
+the text between the angle brackets, verbatim), and $node->{offset}
+(number of bytes from the beginning of the string).
+
+The possible values of $node->{type} are C<text>, C<starttag>,
+C<endtag>, C<ssi>, and C<markup>.
 
 =item * parse
 
