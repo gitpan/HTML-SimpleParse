@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..5\n"; }
+BEGIN { $| = 1; print "1..7\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use HTML::SimpleParse;
 $loaded = 1;
@@ -56,3 +56,32 @@ sub report_result {
 	               "$hash{type} eq checkbox and exists (". exists($hash{checked}) .") and 
 	                $hash{value} eq 'chocolate or strawberry'");
 }
+
+# 7
+{
+	my %hash=HTML::SimpleParse->parse_args(' A="xx" B');
+	&report_result(($hash{A} eq 'xx' and exists $hash{B}),
+	               "$hash{A} eq 'xx' and \$hash{B}, (". exists($hash{B}) .")\n");
+}
+
+# 6
+{
+	my $text = <<EOF;
+	<html><head>
+	<title>Hiya, tester</title>
+	</head>
+	
+	<body>
+	<center><h1>Hiya, tester</h1></center>
+	<!-- here is a comment -->
+	<!DOCTYPE here is a markup>
+	<!--# here is an ssi -->
+	</body>
+	</html>
+EOF
+	my $p = new HTML::SimpleParse( $text );
+	
+	&report_result($p->get_output() eq $text, $p->get_output);
+
+}
+

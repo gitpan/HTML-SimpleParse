@@ -7,3 +7,23 @@ Revision history for Perl extension HTML::SimpleParse.
     - fixed bug in parse_args method pointed out by Ben Laurie:
        %hash=HTML::SimpleParse->parse_args('A="xx" B');
        did not include B in %hash.
+
+0.03  Fri Aug  7 13:03:34 EDT 1998
+    - changed the output_* methods so that they return their
+      output, instead of printing it.  There's a new method, get_output(),
+      which returns a string containing the parsed output.  The
+      output() method then prints the result of get_output().
+      This lets the module work with Apache::OutputChain.  Thanks to 
+      Honza Pazdziora for the patches (which I modified a little).
+    
+    - fixed the processing of markup declarations (e.g. <!DOCTYPE ...>)
+    
+    - parse_args method can handle leading whitespace now:
+      my %hash=HTML::SimpleParse->parse_args(' A="xx" B');
+      used to return an empty hash (thanks to Ben Laurie again).
+      
+    - parse_args makes sure that it starts matching at the beginning
+      of the string you give it, by setting pos() to 0.
+    
+    I'm also going to update Apache::SSI so that it can use this new version.
+    

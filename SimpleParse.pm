@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 sub new {
 	my $pack = shift;
@@ -46,9 +46,16 @@ sub parse {
 		if ($$text =~ /\G([^<]+)/gcs) {
 			$content = $1; $type = 'text';
 
-		# Then, markup declarations (usually either <!DOCTYPE...> or a comment)
-		} elsif ($$text =~ /\G<(!([^>]*?)--(\#?).*?--)>/gcs) {
-			$type = ($2 ? 'markup' : ($3 ? 'ssi' : 'comment'));
+		# Then, SSI, comments, and markup declarations (usually <!DOCTYPE...>)
+		# ssi:     <!--#stuff-->
+		# comment: <!--stuff-->
+		# markup:  <!stuff>
+		} elsif ($$text =~ /\G<(!--(\#?).*?--)>/gcs) {
+			$type = ($2 ? 'ssi' : 'comment');
+			$content = $1;
+
+		} elsif ($$text =~ /\G<(!.*?)>/gcs) {
+			$type = 'markup';
 			$content = $1;
 
 		# Then, look for an end tag
@@ -81,8 +88,12 @@ sub parse {
 sub parse_args {
 	my $self = shift;
 	my @returns;
+	
+	pos($_[0]) = 0;  # Make sure we start searching at the beginning of the string
 
 	while (1) {
+		next if $_[0] =~ m/\G\s+/gc;  # Get rid of leading whitespace
+
 		if ( $_[0] =~ m/\G
 			(\S+)=                                   # the key
 			(?:
@@ -103,21 +114,34 @@ sub parse_args {
 }
 
 
+# Perhaps these next two functions should use a common
+# worker-function, which could take a callback routine.
+
+sub get_output {
+	my $self = shift;
+	my ($method, $out) = ('', '');
+	foreach ($self->tree) {
+		$method = "output_$_->{type}";
+		$out .= $self->$method($_->{content});
+	}
+	return $out;
+}
+
 sub output {
 	my $self = shift;
 	my $method;
 	foreach ($self->tree) {
 		$method = "output_$_->{type}";
-		$self->$method($_->{content});
+		print $self->$method($_->{content});
 	}
 }
 
-sub output_text		{ print $_[1]; }
-sub output_comment	{ print "<$_[1]>"; }
-sub output_endtag		{ print "<$_[1]>"; }
-sub output_starttag	{ print "<$_[1]>"; }
-sub output_markup		{ print "<$_[1]>"; }
-sub output_ssi			{ print "<$_[1]>"; }
+sub output_text      {   $_[1]; }
+sub output_comment   { "<$_[1]>"; }
+sub output_endtag    { "<$_[1]>"; }
+sub output_starttag  { "<$_[1]>"; }
+sub output_markup    { "<$_[1]>"; }
+sub output_ssi       { "<$_[1]>"; }
 
 1;
 __END__
