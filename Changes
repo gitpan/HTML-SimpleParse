@@ -1,5 +1,18 @@
 Revision history for Perl extension HTML::SimpleParse.
 
+0.09  Sat May 27 12:18:38 EDT 2000
+   - HTML tag attribute names should contain only letters, digits, periods,
+     or hyphens.  I've made this change to parse_args().
+
+   - parse_args() handles single-quoted data now. [tim.holt@qsent.com (Tim Holt)]
+
+   - parse_args() now respects a new flag 'fix_case', which can be set
+     either as a package global or a class data member, which controls
+     whether attribute names are upper-cased or lower-cased or left alone.
+     Previously everything was left alone, which was incorrect because HTML
+     tag attribute names are supposed to be case-insensitive.  Now the
+     default is to upper-case everything.  [spot: tim.holt@qsent.com (Tim Holt)]
+
 0.08  Sat Jan 29 03:16:48 EST 2000
     - Avoid warning when new() is called without feeding HTML to it
       [jerome.oneil@activeindexing.com (Jerome O'Neil)]

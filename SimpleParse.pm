@@ -1,9 +1,9 @@
 package HTML::SimpleParse;
 
 use strict;
-use vars qw($VERSION);
+use vars qw($VERSION $FIX_CASE);
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 my $debug = 0;
 
 sub new {
@@ -12,9 +12,10 @@ sub new {
   my $self = bless {
 		    'text' => shift(),
 		    'tree' => [],
+		    @_
 		   }, $pack;
   
-  $self->parse if defined $self->{'text'};
+  $self->parse() if defined $self->{'text'};
   return $self;
 }
 
@@ -84,8 +85,11 @@ sub parse {
   $self;
 }
 
+
+$FIX_CASE = 1;
 sub parse_args {
   my $self = shift;  # Not needed here
+  my $fix_case = ((ref $self and exists $self->{fix_case}) ? $self->{fix_case} : $FIX_CASE);
   my @returns;
   
   # Make sure we start searching at the beginning of the string
@@ -95,19 +99,21 @@ sub parse_args {
     next if $_[0] =~ m/\G\s+/gc;  # Get rid of leading whitespace
     
     if ( $_[0] =~ m/\G
-	 (\S+?)\s*=\s*                            # the key
+	 ([\w.-]+)\s*=\s*                         # the key
 	 (?:
 	  "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside,
+	  |                                       #  or
+	  '([^\'\\]*  (?: \\.[^\'\\]* )* )'\s*    # quoted string, with possible whitespace inside,
 	  |                                       #  or
 	  ([^\s>]*)\s*                            # anything else, without whitespace or >
 	 )/gcx ) {
       
       my ($key, $val) = ($1, $+);
       $val =~ s/\\(.)/$1/gs;
-      push @returns, $key, $val;
+      push @returns, ($fix_case==1 ? uc($key) : $fix_case==-1 ? lc($key) : $key), $val;
       
-    } elsif ( $_[0] =~ m/\G(\S+)\s*/gc ) {
-      push @returns, $1, undef;
+    } elsif ( $_[0] =~ m/\G([\w.-]+)\s*/gc ) {
+      push @returns, ($fix_case==1 ? uc($1)   : $fix_case==-1 ? lc($1)   : $1  ), undef;
     } else {
       last;
     }
@@ -169,18 +175,22 @@ HTML::SimpleParse - a bare-bones HTML parser
  $p->parse                   # Parse the new HTML
  $p->output;
 
+ my %attrs = HTML::SimpleParse->parse_args('A="xx" B=3');
+ # %attrs is now ('A' => 'xx', 'B' => '3')
+
 =head1 DESCRIPTION
 
 This module is a simple HTML parser.  It is similar in concept to HTML::Parser,
 but it differs in a couple of important ways.  
 
-First, HTML::Parser knows which
-tags can contain other tags, which start tags have corresponding end tags, which
-tags can exist only in the <HEAD> portion of the document, and so forth.  
-HTML::SimpleParse does not know any of these things.  It just finds tags and text
-in the HTML you give it, it does not care about the specific content of these tags
-(though it does distiguish between different _types_ of tags, such as comments,
-starting tags like <b>, ending tags like </b>, and so on).
+First, HTML::Parser knows which tags can contain other tags, which
+start tags have corresponding end tags, which tags can exist only in
+the <HEAD> portion of the document, and so forth.  HTML::SimpleParse
+does not know any of these things.  It just finds tags and text in the
+HTML you give it, it does not care about the specific content of these
+tags (though it does distiguish between different _types_ of tags,
+such as comments, starting tags like <b>, ending tags like </b>, and
+so on).
 
 Second, HTML::SimpleParse does not create a hierarchical tree of HTML content,
 but rather a simple linear list.  It does not pay any attention to balancing
@@ -211,6 +221,12 @@ Creates a new HTML::SimpleParse object.  Optionally takes one argument,
 a string containing some HTML with which to initialize the object.  If
 you give it a non-empty string, the HTML will be parsed into a tree and 
 ready for outputting.
+
+Can also take a list of attributes, such as
+
+ $p = new HTML::SimpleParse( $some_html, 'fix_case' => -1);
+
+See the C<parse_args()> method below for an explanation of this attribute.
 
 =item * text
 
@@ -247,26 +263,38 @@ pairs.  For instance:
 
   $text = 'type=checkbox checked name=flavor value="chocolate or strawberry"';
   %hash = $p->parse_args( $text );
-  # %hash is ( type=>'checkbox', checked=>undef, name=>'flavor',
-  #            value=>'chocolate or strawberry' )
+  # %hash is ( TYPE=>'checkbox', CHECKED=>undef, NAME=>'flavor',
+  #            VALUE=>'chocolate or strawberry' )
 
 Note that the position of the last m//g search on the string (the value 
 returned by Perl's pos() function) will be altered by the parse_args function,
 so make sure you take that into account if (in the above example) you do
 C<$text =~ m/something/g>.
 
+The parse_args() method can be run as either an object method or as a
+class method, i.e. as either $p->parse_args(...) or
+HTML::SimpleParse->parse_args(...).
+
+HTML attribute lists are supposed to be case-insensitive with respect
+to attribute names.  To achieve this behavior, parse_args() respects
+the 'fix_case' flag, which can be set either as a package global
+$FIX_CASE, or as a class member datum 'fix_case'.  If set to 0, no
+case conversion is done.  If set to 1, all keys are converted to upper
+case.  If set to -1, all keys are converted to lower case.  The
+default is 1, i.e. all keys are uppercased.
+
 If an attribute takes no value (like "checked" in the above example) then it
 will still have an entry in the returned hash, but its value will be C<undef>.
 For example:
 
   %hash = $p->parse_args('type=checkbox checked name=banana value=""');
-  # $hash{checked} is undef, but $hash{value} is ""
+  # $hash{CHECKED} is undef, but $hash{VALUE} is ""
 
 This method actually returns a list (not a hash), so duplicate attributes and
 order will be preserved if you want them to be:
 
  @hash = $p->parse_args("name=family value=gwen value=mom value=pop");
- # @hash is qw(name family value gwen value mom value pop)
+ # @hash is qw(NAME family VALUE gwen VALUE mom VALUE pop)
 
 =item * output
 
