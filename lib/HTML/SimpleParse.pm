@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION $FIX_CASE);
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 my $debug = 0;
 
 sub new {
@@ -185,9 +185,9 @@ HTML::SimpleParse - a bare-bones HTML parser
 =head1 DESCRIPTION
 
 This module is a simple HTML parser.  It is similar in concept to HTML::Parser,
-but it differs in a couple of important ways.  
+but it differs from HTML::TreeBuilder in a couple of important ways.
 
-First, HTML::Parser knows which tags can contain other tags, which
+First, HTML::TreeBuilder knows which tags can contain other tags, which
 start tags have corresponding end tags, which tags can exist only in
 the <HEAD> portion of the document, and so forth.  HTML::SimpleParse
 does not know any of these things.  It just finds tags and text in the
@@ -212,6 +212,15 @@ from HTML:
  
  package main;
  NoComment->new($some_html)->output;
+
+Historically, I started the HTML::SimpleParse project in part because
+of a misunderstanding about HTML::Parser's functionality.  Many
+aspects of these two modules actually overlap.  I continue to maintain
+the HTML::SimpleParse module because people seem to be depending on
+it, and because beginners sometimes find HTML::SimpleParse to be
+simpler than HTML::Parser's more powerful interface.  People also seem
+to get a fair amount of usage out of the C<parse_args()> method
+directly.
 
 =head2 Methods
 

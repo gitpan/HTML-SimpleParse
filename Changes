@@ -1,5 +1,12 @@
 Revision history for Perl extension HTML::SimpleParse.
 
+0.12  Wed Jul  9 12:19:38 CDT 2003
+
+ - Clarify the relationship between this module and HTML::TreeBuilder
+   in the documentation. [suggested by Gisle Aas]
+
+ - Moved regression tests from test.pl to t/basic.t
+
 0.11  Sun Jan 26 10:00:41 CST 2003
 
  - Use Test.pm to output testing results.

@@ -5,4 +5,4 @@ META.yml
 Makefile.PL
 README
 lib/HTML/SimpleParse.pm
-test.pl
+t/basic.t
