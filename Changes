@@ -1,12 +1,23 @@
 Revision history for Perl extension HTML::SimpleParse.
 
-0.01  Fri Jun 26 17:42:41 1998
-    - original version; created by h2xs 1.18
 
-0.02  Thu Aug  6 16:08:22 EDT 1998
-    - fixed bug in parse_args method pointed out by Ben Laurie:
-       %hash=HTML::SimpleParse->parse_args('A="xx" B');
-       did not include B in %hash.
+0.06  Fri Feb  5 18:22:15 EST 1999
+    - Fixed a bug in the parse_args routine that should properly handle
+      escaping of parameters like var="a \"value\"" [thanks, Philippe
+      Chiasson]
+
+0.05  Thu Aug 20 12:11:53 EDT 1998
+    - Fixed a bug in HTML::SimpleParse->parse_args('a="b=c"').  Thanks
+      to Shenghuo ZHU for finding it.
+
+0.04  Tue Aug 18 19:46:01 EDT 1998
+
+    - added execute() method that lets you do:
+      foreach ($p->tree) {
+         print $p->execute($_);
+      }
+      This lets Apache::OutputChain and Apache::SSIChain output their results in
+      the correct order.
 
 0.03  Fri Aug  7 13:03:34 EDT 1998
     - changed the output_* methods so that they return their
@@ -27,15 +38,11 @@ Revision history for Perl extension HTML::SimpleParse.
     
     I'm also going to update Apache::SSI so that it can use this new version.
 
-0.04  Tue Aug 18 19:46:01 EDT 1998
+0.02  Thu Aug  6 16:08:22 EDT 1998
+    - fixed bug in parse_args method pointed out by Ben Laurie:
+       %hash=HTML::SimpleParse->parse_args('A="xx" B');
+       did not include B in %hash.
 
-    - added execute() method that lets you do:
-      foreach ($p->tree) {
-         print $p->execute($_);
-      }
-      This lets Apache::OutputChain and Apache::SSIChain output their results in
-      the correct order.
+0.01  Fri Jun 26 17:42:41 1998
+    - original version; created by h2xs 1.18
 
-0.05  Thu Aug 20 12:11:53 EDT 1998
-    - Fixed a bug in HTML::SimpleParse->parse_args('a="b=c"').  Thanks
-      to Shenghuo ZHU for finding it.

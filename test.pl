@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..8\n"; }
+BEGIN { $| = 1; print "1..9\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use HTML::SimpleParse;
 $loaded = 1;
@@ -92,3 +92,8 @@ EOF
 	&report_result($hash{a} eq "b=c", "hash: @{[ %hash ]}\n");
 }
 
+# 9
+{
+	my %hash = HTML::SimpleParse->parse_args('val="a \"value\""');
+	&report_result($hash{val} eq 'a "value"', "value: $hash{val}\n");
+}

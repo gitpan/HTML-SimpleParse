@@ -3,7 +3,7 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 my $debug = 0;
 
 sub new {
@@ -34,7 +34,7 @@ sub parse {
 	my $tree = $self->{'tree'};
 
 	# Parse html text in $$text.  The strategy is to remove complete
-	# tokens from the beginning of $$text until we can't deside whether
+	# tokens from the beginning of $$text until we can't decide whether
 	# it is a token or not, or the $$text is empty.
 
 	@$tree = ();
@@ -85,7 +85,7 @@ sub parse {
 }
 
 sub parse_args {
-	my $self = shift;
+	my $self = shift;  # Not needed here
 	my @returns;
 	
 	pos($_[0]) = 0;  # Make sure we start searching at the beginning of the string
@@ -100,7 +100,10 @@ sub parse_args {
 			  |                                      #  or
 			 ([^\s>]*)\s*                            # anything else, without whitespace or >
 		   )/gcx ) {
-			push @returns, $1, $+;
+
+			my ($key, $val) = ($1, $+);
+			$val =~ s/\\(.)/$1/gs;
+			push @returns, $key, $val;
 
 		} elsif ( $_[0] =~ m/\G(\S+)\s*/gc ) {
 			push @returns, $1, undef;
@@ -251,13 +254,18 @@ returned by Perl's pos() function) will be altered by the parse_args function,
 so make sure you take that into account if (in the above example) you do
 C<$text =~ m/something/g>.
 
-If an attribute has no value (like "checked" in the above example) then its
-hash value will be undefined.  Check for this by using perl's C<exists> function.
+If an attribute takes no value (like "checked" in the above example) then it
+will still have an entry in the returned hash, but its value will be C<undef>.
+For example:
+
+  %hash = $p->parse_args('type=checkbox checked name=banana value=""');
+  # $hash{checked} is undef, but $hash{value} is ""
 
 This method actually returns a list (not a hash), so duplicate attributes and
 order will be preserved if you want them to be:
 
- @hash = $p->parse_args("name=bob name=jim value=family");
+ @hash = $p->parse_args("name=family value=gwen value=mom value=pop");
+ # @hash is qw(name family value gwen value mom value pop)
 
 =item * output
 
