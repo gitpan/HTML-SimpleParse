@@ -26,4 +26,12 @@ Revision history for Perl extension HTML::SimpleParse.
       of the string you give it, by setting pos() to 0.
     
     I'm also going to update Apache::SSI so that it can use this new version.
-    
+
+0.04  Tue Aug 18 19:46:01 EDT 1998
+
+    - added execute() method that lets you do:
+      foreach ($p->tree) {
+         print $p->execute($_);
+      }
+      This lets Apache::OutputChain and Apache::SSIChain output their results in
+      the correct order.

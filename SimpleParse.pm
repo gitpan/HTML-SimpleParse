@@ -3,7 +3,8 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '0.03';
+$VERSION = '0.04';
+my $debug = 0;
 
 sub new {
 	my $pack = shift;
@@ -19,9 +20,7 @@ sub new {
 
 sub text {
 	my $self = shift;
-	if (@_) {
-		$self->{'text'} = shift;
-	}
+	$self->{'text'} = shift if @_;
 	return $self->{'text'};
 }
 
@@ -114,25 +113,29 @@ sub parse_args {
 }
 
 
-# Perhaps these next two functions should use a common
-# worker-function, which could take a callback routine.
+sub execute {
+	my $self = shift;
+	my $ref = shift;
+	my $method = "output_$ref->{type}";
+	warn "calling $self->$method(...)" if $debug;
+	return $self->$method($ref->{content});
+}
 
 sub get_output {
 	my $self = shift;
 	my ($method, $out) = ('', '');
 	foreach ($self->tree) {
-		$method = "output_$_->{type}";
-		$out .= $self->$method($_->{content});
+		$out .= $self->execute($_);
 	}
 	return $out;
 }
+
 
 sub output {
 	my $self = shift;
 	my $method;
 	foreach ($self->tree) {
-		$method = "output_$_->{type}";
-		print $self->$method($_->{content});
+		print $self->execute($_);
 	}
 }
 
