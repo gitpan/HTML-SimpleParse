@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..9\n"; }
+BEGIN { $| = 1; print "1..11\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use HTML::SimpleParse;
 $loaded = 1;
@@ -96,4 +96,20 @@ EOF
 {
 	my %hash = HTML::SimpleParse->parse_args('val="a \"value\""');
 	&report_result($hash{val} eq 'a "value"', "value: $hash{val}\n");
+}
+
+# 10
+{
+  my %hash = HTML::SimpleParse->parse_args('val = "a \"value\""');
+  &report_result($hash{val} eq 'a "value"', "value: $hash{val}\n");
+}
+
+# 11
+{
+  # Avoid 'uninitialized value' warning
+  my $ok=1;
+  local $^W=1;
+  local $SIG{__WARN__} = sub {$ok=0};
+  HTML::SimpleParse->new();
+  &report_result($ok);
 }

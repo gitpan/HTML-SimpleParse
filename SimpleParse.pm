@@ -3,143 +3,144 @@ package HTML::SimpleParse;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = '0.06';
+$VERSION = '0.08';
 my $debug = 0;
 
 sub new {
-	my $pack = shift;
-
-	my $self = bless {
-		'text' => shift(),
-		'tree' => [],
-	}, $pack;
-
-	$self->parse if length $self->{'text'};
-	return $self;
+  my $pack = shift;
+  
+  my $self = bless {
+		    'text' => shift(),
+		    'tree' => [],
+		   }, $pack;
+  
+  $self->parse if defined $self->{'text'};
+  return $self;
 }
 
 sub text {
-	my $self = shift;
-	$self->{'text'} = shift if @_;
-	return $self->{'text'};
+  my $self = shift;
+  $self->{'text'} = shift if @_;
+  return $self->{'text'};
 }
 
 sub tree { @{$_[0]->{'tree'}} }
 
 sub parse {
-	# Much of this is a dumbed-down version of HTML::Parser::parse.
-	
-	my $self = shift;
-	my $text = \ $self->{'text'};
-	my $tree = $self->{'tree'};
-
-	# Parse html text in $$text.  The strategy is to remove complete
-	# tokens from the beginning of $$text until we can't decide whether
-	# it is a token or not, or the $$text is empty.
-
-	@$tree = ();
-	while (1) {
-		my ($content, $type);
-
-		# First we try to pull off any plain text (anything before a "<" char)
-		if ($$text =~ /\G([^<]+)/gcs) {
-			$content = $1; $type = 'text';
-
-		# Then, SSI, comments, and markup declarations (usually <!DOCTYPE...>)
-		# ssi:     <!--#stuff-->
-		# comment: <!--stuff-->
-		# markup:  <!stuff>
-		} elsif ($$text =~ /\G<(!--(\#?).*?--)>/gcs) {
-			$type = ($2 ? 'ssi' : 'comment');
-			$content = $1;
-
-		} elsif ($$text =~ /\G<(!.*?)>/gcs) {
-			$type = 'markup';
-			$content = $1;
-
-		# Then, look for an end tag
-		} elsif ($$text =~ m|\G<(/[a-zA-Z][a-zA-Z0-9\.\-]*\s*)>|gcs) {
-			$content = $1; $type = 'endtag';
-
-		# Then, finally we look for a start tag
-		# We know the first char is <, make sure there's a >
-		} elsif ($$text =~ /\G<(.*?)>/gcs) {
-			$content = $1; $type = 'starttag';
-
-		} else {
-			# the string is exhausted, or there's no > in it.
-			push @$tree, {
-				'content'	=> substr($$text, pos $$text),
-				'type'		=> 'text',
-			} unless pos($$text) eq length($$text);
-			last;
-		}
-		
-		push @$tree, {
-			'content'	=> $content,
-			'type'		=> $type,
-		};
-	}
-
-	$self;
+  # Much of this is a dumbed-down version of HTML::Parser::parse.
+  
+  my $self = shift;
+  my $text = \ $self->{'text'};
+  my $tree = $self->{'tree'};
+  
+  # Parse html text in $$text.  The strategy is to remove complete
+  # tokens from the beginning of $$text until we can't decide whether
+  # it is a token or not, or the $$text is empty.
+  
+  @$tree = ();
+  while (1) {
+    my ($content, $type);
+    
+    # First we try to pull off any plain text (anything before a "<" char)
+    if ($$text =~ /\G([^<]+)/gcs) {
+      $content = $1; $type = 'text';
+      
+      # Then, SSI, comments, and markup declarations (usually <!DOCTYPE...>)
+      # ssi:     <!--#stuff-->
+      # comment: <!--stuff-->
+      # markup:  <!stuff>
+    } elsif ($$text =~ /\G<(!--(\#?).*?--)>/gcs) {
+      $type = ($2 ? 'ssi' : 'comment');
+      $content = $1;
+      
+    } elsif ($$text =~ /\G<(!.*?)>/gcs) {
+      $type = 'markup';
+      $content = $1;
+      
+      # Then, look for an end tag
+    } elsif ($$text =~ m|\G<(/[a-zA-Z][a-zA-Z0-9\.\-]*\s*)>|gcs) {
+      $content = $1; $type = 'endtag';
+      
+      # Then, finally we look for a start tag
+      # We know the first char is <, make sure there's a >
+    } elsif ($$text =~ /\G<(.*?)>/gcs) {
+      $content = $1; $type = 'starttag';
+      
+    } else {
+      # the string is exhausted, or there's no > in it.
+      push @$tree, {
+		    'content' => substr($$text, pos $$text),
+		    'type'    => 'text',
+		   } unless pos($$text) eq length($$text);
+      last;
+    }
+    
+    push @$tree, {
+		  'content' => $content,
+		  'type'    => $type,
+		 };
+  }
+  
+  $self;
 }
 
 sub parse_args {
-	my $self = shift;  # Not needed here
-	my @returns;
-	
-	pos($_[0]) = 0;  # Make sure we start searching at the beginning of the string
-
-	while (1) {
-		next if $_[0] =~ m/\G\s+/gc;  # Get rid of leading whitespace
-
-		if ( $_[0] =~ m/\G
-			(\S+?)=                                  # the key
-			(?:
-			 "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside,
-			  |                                      #  or
-			 ([^\s>]*)\s*                            # anything else, without whitespace or >
-		   )/gcx ) {
-
-			my ($key, $val) = ($1, $+);
-			$val =~ s/\\(.)/$1/gs;
-			push @returns, $key, $val;
-
-		} elsif ( $_[0] =~ m/\G(\S+)\s*/gc ) {
-			push @returns, $1, undef;
-		} else {
-			last;
-		}
-	}
-
-	return @returns;
+  my $self = shift;  # Not needed here
+  my @returns;
+  
+  # Make sure we start searching at the beginning of the string
+  pos($_[0]) = 0;
+  
+  while (1) {
+    next if $_[0] =~ m/\G\s+/gc;  # Get rid of leading whitespace
+    
+    if ( $_[0] =~ m/\G
+	 (\S+?)\s*=\s*                            # the key
+	 (?:
+	  "([^\"\\]*  (?: \\.[^\"\\]* )* )"\s*    # quoted string, with possible whitespace inside,
+	  |                                       #  or
+	  ([^\s>]*)\s*                            # anything else, without whitespace or >
+	 )/gcx ) {
+      
+      my ($key, $val) = ($1, $+);
+      $val =~ s/\\(.)/$1/gs;
+      push @returns, $key, $val;
+      
+    } elsif ( $_[0] =~ m/\G(\S+)\s*/gc ) {
+      push @returns, $1, undef;
+    } else {
+      last;
+    }
+  }
+  
+  return @returns;
 }
 
 
 sub execute {
-	my $self = shift;
-	my $ref = shift;
-	my $method = "output_$ref->{type}";
-	warn "calling $self->$method(...)" if $debug;
-	return $self->$method($ref->{content});
+  my $self = shift;
+  my $ref = shift;
+  my $method = "output_$ref->{type}";
+  warn "calling $self->$method(...)" if $debug;
+  return $self->$method($ref->{content});
 }
 
 sub get_output {
-	my $self = shift;
-	my ($method, $out) = ('', '');
-	foreach ($self->tree) {
-		$out .= $self->execute($_);
-	}
-	return $out;
+  my $self = shift;
+  my ($method, $out) = ('', '');
+  foreach ($self->tree) {
+    $out .= $self->execute($_);
+  }
+  return $out;
 }
 
 
 sub output {
-	my $self = shift;
-	my $method;
-	foreach ($self->tree) {
-		print $self->execute($_);
-	}
+  my $self = shift;
+  my $method;
+  foreach ($self->tree) {
+    print $self->execute($_);
+  }
 }
 
 sub output_text      {   $_[1]; }
